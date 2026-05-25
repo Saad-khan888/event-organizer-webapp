@@ -72,7 +72,8 @@ export default function ReporterDashboard() {
                                 throw new Error(data.error || 'Failed to upload image');
                             }
                             
-                            uploadedImagePaths.push(data.filename);
+                            // Cloudinary returns full URL in data.url
+                            uploadedImagePaths.push(data.url || data.filename);
                         } catch (uploadError) {
                             console.error('Image upload failed:', uploadError);
                             alert(`Failed to upload image: ${uploadError.message}`);

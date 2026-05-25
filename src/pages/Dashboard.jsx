@@ -42,7 +42,7 @@ export default function Dashboard() {
                             className={`btn ${reporterView === 'events' ? 'btn-primary' : 'btn-outline'}`}
                             onClick={() => setReporterView('events')}
                         >
-                            Organizer View
+                            Browse Events
                         </button>
                     </div>
                     {reporterView === 'news' ? <ReporterDashboard /> : <OrganizerDashboard />}
