@@ -29,25 +29,7 @@ export default function Dashboard() {
         <div style={{ paddingBottom: '2rem' }}>
             {user.role === 'organizer' && <OrganizerDashboard />}
             {user.role === 'athlete' && <AthleteDashboard />}
-            {user.role === 'reporter' && (
-                <>
-                    <div className="container" style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem', gap: '8px' }}>
-                        <button 
-                            className={`btn ${reporterView === 'news' ? 'btn-primary' : 'btn-outline'}`}
-                            onClick={() => setReporterView('news')}
-                        >
-                            News Desk
-                        </button>
-                        <button 
-                            className={`btn ${reporterView === 'events' ? 'btn-primary' : 'btn-outline'}`}
-                            onClick={() => setReporterView('events')}
-                        >
-                            Browse Events
-                        </button>
-                    </div>
-                    {reporterView === 'news' ? <ReporterDashboard /> : <OrganizerDashboard />}
-                </>
-            )}
+            {user.role === 'reporter' && <ReporterDashboard />}
             {user.role === 'viewer' && <ViewerDashboard />}
         </div>
     );

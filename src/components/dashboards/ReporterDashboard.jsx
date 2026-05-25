@@ -73,7 +73,9 @@ export default function ReporterDashboard() {
                             }
                             
                             // Cloudinary returns full URL in data.url
-                            uploadedImagePaths.push(data.url || data.filename);
+                            const imageUrl = data.url || data.path || data.filename;
+                            console.log('Storing image URL:', imageUrl);
+                            uploadedImagePaths.push(imageUrl);
                         } catch (uploadError) {
                             console.error('Image upload failed:', uploadError);
                             alert(`Failed to upload image: ${uploadError.message}`);
