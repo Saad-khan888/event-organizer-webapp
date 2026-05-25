@@ -152,7 +152,9 @@ export const TicketingProvider = ({ children }) => {
         const formData = new FormData();
         formData.append('image', proofFile);
         
-        const response = await fetch(`http://localhost:5001/api/upload?folder=payment-proofs`, {
+        const API_URL = import.meta.env.VITE_API_URL || 'https://event-organizer-webapp.onrender.com/api';
+        
+        const response = await fetch(`${API_URL.replace('/api', '')}/api/upload?folder=payment-proofs`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`

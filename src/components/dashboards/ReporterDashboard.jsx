@@ -51,11 +51,13 @@ export default function ReporterDashboard() {
                 for (const img of newReport.images) {
                     if (img instanceof File) {
                         try {
-                            // Upload to local backend
+                            // Upload to backend
                             const formData = new FormData();
                             formData.append('image', img);
                             
-                            const response = await fetch(`http://localhost:5001/api/upload?folder=report-images`, {
+                            const API_URL = import.meta.env.VITE_API_URL || 'https://event-organizer-webapp.onrender.com/api';
+                            
+                            const response = await fetch(`${API_URL.replace('/api', '')}/api/upload?folder=report-images`, {
                                 method: 'POST',
                                 headers: {
                                     'Authorization': `Bearer ${localStorage.getItem('token')}`
