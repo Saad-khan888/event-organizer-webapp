@@ -21,7 +21,18 @@ export default function ReporterDashboard() {
     const [isPublishing, setIsPublishing] = useState(false);
 
     // Filter available reports to show only ones BELONGING to this reporter.
-    const myReports = reports.filter(r => r.reporter === user.id);
+    const myReports = reports.filter(r => {
+        const reporterId = typeof r.reporter === 'object' ? (r.reporter?._id || r.reporter?.id) : r.reporter;
+        return String(reporterId) === String(user.id) || String(reporterId) === String(user._id);
+    });
+    
+    console.log('Reporter Dashboard:', {
+        userId: user.id,
+        userIdAlt: user._id,
+        totalReports: reports.length,
+        myReports: myReports.length,
+        allReporters: reports.map(r => typeof r.reporter === 'object' ? r.reporter : { id: r.reporter })
+    });
 
     // 2. EVENT HANDLERS
 
