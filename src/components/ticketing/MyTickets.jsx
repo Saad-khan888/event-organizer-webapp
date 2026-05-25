@@ -53,13 +53,13 @@ export default function MyTickets() {
     // FIX: Ensure we only show orders belonging to the CURRENT USER (not all organizer orders)
     const pendingOrders = orders.filter(o =>
         (o.status === 'pending_payment' || o.status === 'pending_verification') &&
-        o.user_id === user.id
+        (String(o.user) === String(user.id) || String(o.user_id) === String(user.id))
     );
 
     // NEW: Filter for rejected orders
     const rejectedOrders = orders.filter(o =>
         o.status === 'rejected' &&
-        o.user_id === user.id
+        (String(o.user) === String(user.id) || String(o.user_id) === String(user.id))
     );
 
     const handleUploadClick = (order) => {

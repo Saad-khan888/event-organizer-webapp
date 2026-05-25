@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { useTicketing } from '../context/TicketingContext';
-import { getImageUrl } from '../lib/supabase';
+import { getImageUrl } from '../lib/imageUtils';
 import { Search as SearchIcon, MapPin, Calendar, Tag, CheckCircle, AlertCircle, Filter, Briefcase } from 'lucide-react';
 
 // -----------------------------------------------------------------------------
@@ -155,7 +155,8 @@ export default function Events() {
                                     gap: 'var(--space-2)'
                                 }}>
                                     {(() => {
-                                        const organizer = users.find(u => u.id === event.organizer);
+                                        // Organizer is now populated from backend
+                                        const organizer = event.organizer;
                                         return (
                                             <>
                                                 <div style={{
@@ -173,8 +174,8 @@ export default function Events() {
                                                     {(() => {
                                                         let src = null;
                                                         if (organizer) {
-                                                            if (organizer.avatar) src = getImageUrl('avatars', organizer.avatar);
-                                                            else if (organizer.profilePicture) src = getImageUrl('avatars', organizer.profilePicture);
+                                                            if (organizer.avatar) src = getImageUrl(organizer.avatar);
+                                                            else if (organizer.profilePicture) src = getImageUrl(organizer.profilePicture);
                                                         }
 
                                                         return src ? (
@@ -254,13 +255,15 @@ export default function Events() {
                                         {/* Participants Facepile */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
                                             <div style={{ display: 'flex', paddingLeft: '8px' }}>
-                                                {event.participants && event.participants.slice(0, 4).map((pid, idx) => {
-                                                    const pUser = users.find(u => u.id === pid);
+                                                {event.participants && event.participants.slice(0, 4).map((participant, idx) => {
+                                                    // Participant might be populated object or just ID
+                                                    const pUser = typeof participant === 'object' ? participant : users.find(u => u.id === participant);
+                                                    const pid = typeof participant === 'object' ? participant.id : participant;
 
                                                     let pSrc = null;
                                                     if (pUser) {
-                                                        if (pUser.avatar) pSrc = getImageUrl('avatars', pUser.avatar);
-                                                        else if (pUser.profilePicture) pSrc = getImageUrl('avatars', pUser.profilePicture);
+                                                        if (pUser.avatar) pSrc = getImageUrl(pUser.avatar);
+                                                        else if (pUser.profilePicture) pSrc = getImageUrl(pUser.profilePicture);
                                                     }
 
                                                     return (
@@ -314,9 +317,12 @@ export default function Events() {
                                             // Athletes don't have tickets/pending statuses
                                             if (isAthlete) return null;
 
-                                            const status = getEventParticipationStatus
-                                                ? getEventParticipationStatus(event.id).status
-                                                : (hasJoinedEvent(event.id) ? 'joined' : 'not_joined');
+                                            const participationStatus = getEventParticipationStatus
+                                                ? getEventParticipationStatus(event.id)
+                                                : null;
+                                            
+                                            const status = participationStatus?.status || 
+                                                (hasJoinedEvent(event.id) ? 'joined' : 'not_joined');
 
                                             if (status === 'joined') {
                                                 return (

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
 import ImageUpload from '../ImageUpload';
-import { getImageUrl, uploadFile } from '../../lib/supabase';
+import { getImageUrl } from '../../lib/imageUtils';
 import { PenTool, FileText, Clock, Trash2 } from 'lucide-react';
 
 // -----------------------------------------------------------------------------
@@ -45,17 +45,35 @@ export default function ReporterDashboard() {
         setIsPublishing(true);
 
         try {
-            // Handle Image Uploads to Supabase Storage
+            // Handle Image Uploads to local backend
             const uploadedImagePaths = [];
             if (newReport.images && newReport.images.length > 0) {
                 for (const img of newReport.images) {
                     if (img instanceof File) {
                         try {
-                            const imagePath = await uploadFile('report-images', img, user.id);
-                            uploadedImagePaths.push(imagePath);
+                            // Upload to local backend
+                            const formData = new FormData();
+                            formData.append('image', img);
+                            
+                            const response = await fetch(`http://localhost:5001/api/upload?folder=report-images`, {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                },
+                                body: formData
+                            });
+                            
+                            const data = await response.json();
+                            console.log('Upload response:', response.status, data);
+                            
+                            if (!response.ok) {
+                                throw new Error(data.error || 'Failed to upload image');
+                            }
+                            
+                            uploadedImagePaths.push(data.filename);
                         } catch (uploadError) {
                             console.error('Image upload failed:', uploadError);
-                            alert(`Failed to upload image: ${uploadError.message}\n\nPlease check:\n1. Storage bucket 'report-images' exists\n2. Bucket is public\n3. Storage policies are set`);
+                            alert(`Failed to upload image: ${uploadError.message}`);
                             setIsPublishing(false);
                             return; // Stop submission if upload fails
                         }

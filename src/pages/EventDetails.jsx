@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
-import { getImageUrl } from '../lib/supabase';
+import { getImageUrl } from '../lib/imageUtils';
 import { MapPin, Calendar, Tag, CheckCircle, AlertCircle, ArrowLeft, User, Briefcase, Clock, Ticket } from 'lucide-react';
 import { useTicketing } from '../context/TicketingContext';
 import TicketPurchase from '../components/ticketing/TicketPurchase';
@@ -24,16 +24,37 @@ export default function EventDetails() {
     // 2. STATE (Local to this event)
     const event = events.find(e => String(e.id) === String(id)); // Find the specific event object using string comparison
     const [showTicketPurchase, setShowTicketPurchase] = useState(false);
-    const { getEventTicketTypes, loading: ticketingLoading, hasJoinedEvent, getEventParticipationStatus } = useTicketing();
+    const [ticketTypes, setTicketTypes] = useState([]);
+    const [loadingTickets, setLoadingTickets] = useState(true);
+    const { getEventTicketTypes, hasJoinedEvent, getEventParticipationStatus } = useTicketing();
+
+    // Fetch ticket types for this event
+    React.useEffect(() => {
+        const fetchTickets = async () => {
+            if (event) {
+                setLoadingTickets(true);
+                const types = await getEventTicketTypes(event._id || event.id);
+                setTicketTypes(types || []);
+                setLoadingTickets(false);
+            }
+        };
+        fetchTickets();
+    }, [event?.id, event?._id, getEventTicketTypes]);
 
     // Check if event has tickets
-    const hasTickets = !ticketingLoading && event ? getEventTicketTypes(event.id).length > 0 : false;
+    const hasTickets = !loadingTickets && ticketTypes.length > 0;
 
     const organizer = event ? users.find(u => u.id === event.organizer) : null;
     
-    // Handle participants - ensure it's an array
+    // Handle participants - ensure it's an array and match IDs properly
     const participantsList = event?.participants && Array.isArray(event.participants) && event.participants.length > 0
-        ? users.filter(u => event.participants.includes(u.id))
+        ? users.filter(u => 
+            event.participants.some(p => {
+                // Handle both populated objects and plain IDs
+                const participantId = typeof p === 'object' ? (p._id || p.id) : p;
+                return String(participantId) === String(u.id) || String(participantId) === String(u._id);
+            })
+        )
         : [];
 
     // Error Handling: If the ID in the URL is wrong
@@ -48,15 +69,19 @@ export default function EventDetails() {
 
     // 4. ELIGIBILITY LOGIC
     const isAthlete = user?.role === 'athlete';
-    // Check if user ID is in participants array (handle both string and UUID)
+    // Check if user ID is in participants array (handle both populated objects and IDs)
     const isAthleteJoined = isAthlete && event.participants && Array.isArray(event.participants) && 
-        event.participants.some(p => String(p) === String(user?.id));
+        event.participants.some(p => {
+            // Handle both populated objects {_id: '...', firstName: '...'} and plain IDs
+            const participantId = typeof p === 'object' ? (p._id || p.id) : p;
+            return String(participantId) === String(user?.id) || String(participantId) === String(user?._id);
+        });
 
-    const participationStatus = user && getEventParticipationStatus
-        ? getEventParticipationStatus(event.id).status
-        : (user && hasJoinedEvent(event.id) ? 'joined' : 'not_joined');
+    const participationInfo = user && getEventParticipationStatus
+        ? getEventParticipationStatus(event.id)
+        : null;
 
-    const isJoined = participationStatus === 'joined' || isAthleteJoined;
+    const isJoined = (participationInfo && participationInfo.hasTickets) || isAthleteJoined;
 
     // Format the timestamp for human reading
     const eventDate = new Date(event.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -175,27 +200,19 @@ export default function EventDetails() {
                         </button>
                     ) : (
                         <>
-                            {participationStatus === 'pending_verification' ? (
-                                <button disabled className="btn btn-outline" style={{ cursor: 'default' }}>
-                                    Pending verification
-                                </button>
-                            ) : participationStatus === 'pending_payment' ? (
-                                <button disabled className="btn btn-outline" style={{ cursor: 'default' }}>
-                                    Pending payment
-                                </button>
-                            ) : null}
-
-                            {ticketingLoading ? (
+                            {loadingTickets ? (
                                 <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                                    Loading...
+                                    Loading tickets...
                                 </p>
                             ) : isAthlete ? (
                                 user ? (
                                     <button
                                         onClick={async () => {
-                                            const res = await joinEvent(event.id, user.id);
+                                            const res = await joinEvent(event.id);
                                             if (res.success) {
                                                 alert('Successfully joined the event!');
+                                                // Refresh the page to show updated participants
+                                                window.location.reload();
                                             } else {
                                                 alert('Failed to join: ' + res.error);
                                             }
@@ -214,7 +231,6 @@ export default function EventDetails() {
                                         onClick={() => setShowTicketPurchase(true)}
                                         className="btn btn-primary"
                                         style={{ marginLeft: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                                        disabled={participationStatus === 'pending_payment' || participationStatus === 'pending_verification'}
                                     >
                                         <Ticket size={20} /> Buy Tickets
                                     </button>

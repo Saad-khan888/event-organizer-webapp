@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import ImageUpload from '../components/ImageUpload';
-import { getImageUrl } from '../lib/supabase';
+import { getImageUrl } from '../lib/imageUtils';
 import { User, MapPin, Globe, Phone, Mail, Clock, Edit2, Save, X, Trash2 } from 'lucide-react';
 import MyTickets from '../components/ticketing/MyTickets';
 
@@ -16,8 +16,8 @@ import MyTickets from '../components/ticketing/MyTickets';
 export default function Profile() {
     // 1. INITIALIZATION
     const { id } = useParams(); // Get user ID from the URL (e.g. /profile/123)
-    const { users, events, reports, updateUser, deleteEvent, deleteReport } = useData();
-    const { user: currentUser } = useAuth(); // The currently logged-in user
+    const { users, events, reports, deleteEvent, deleteReport } = useData();
+    const { user: currentUser, updateProfile } = useAuth(); // The currently logged-in user
 
     // Find the user we are currently viewing.
     // If it's the current user, use the auth object (more up-to-date session).
@@ -83,13 +83,15 @@ export default function Profile() {
 
             // Handle avatar upload if a new image was chosen
             if (editForm.avatar instanceof File) {
-                const { uploadFile } = await import('../lib/supabase');
-                const avatarPath = await uploadFile('avatars', editForm.avatar, user.id);
-                updateData.avatar = avatarPath;
+                updateData.avatar = editForm.avatar;
             }
 
-            await updateUser(user.id, updateData);
-            setIsEditing(false);
+            const result = await updateProfile(updateData);
+            if (result.success) {
+                setIsEditing(false);
+            } else {
+                throw new Error(result.error);
+            }
         } catch (error) {
             console.error('Failed to save profile:', error);
             alert('Failed to update profile. Please try again.');

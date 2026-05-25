@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { getImageUrl } from '../lib/supabase';
+import { getImageUrl } from '../lib/imageUtils';
 import { User, LogOut, Trash2, RefreshCw, ChevronRight, Shield, Bell, Lock, Moon, Sun } from 'lucide-react';
 
 // -----------------------------------------------------------------------------

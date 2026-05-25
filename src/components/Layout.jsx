@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getImageUrl } from '../lib/supabase';
+import { getImageUrl } from '../lib/imageUtils';
 import { Menu, X, User, LogOut, LayoutDashboard, Globe, Search as SearchIcon, Calendar, Settings, Trash2, RefreshCw, Ticket, CreditCard } from 'lucide-react';
 
 // -----------------------------------------------------------------------------

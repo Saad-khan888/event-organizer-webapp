@@ -18,17 +18,51 @@ export default function TicketPurchase({ event, onClose, onPurchaseComplete }) {
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
     const [step, setStep] = useState(1); // 1: Select Ticket, 2: Select Payment, 3: Confirm
     const [loading, setLoading] = useState(false);
+    const [ticketTypes, setTicketTypes] = useState([]);
+    const [paymentMethods, setPaymentMethods] = useState([]);
+    const [loadingData, setLoadingData] = useState(true);
 
-    const ticketTypes = getEventTicketTypes(event.id);
-    const paymentMethods = getEventPaymentMethods(event.id);
+    // Fetch ticket types and payment methods
+    React.useEffect(() => {
+        const fetchData = async () => {
+            setLoadingData(true);
+            const types = await getEventTicketTypes(event._id || event.id);
+            const methods = await getEventPaymentMethods(event._id || event.id);
+            setTicketTypes(types || []);
+            setPaymentMethods(methods || []);
+            setLoadingData(false);
+        };
+        fetchData();
+    }, [event.id, event._id, getEventTicketTypes, getEventPaymentMethods]);
 
     const eligibility = getTicketPurchaseEligibility ? getTicketPurchaseEligibility(event) : { allowed: true, reason: null };
 
-    const selectedTicket = ticketTypes.find(t => t.id === selectedTicketType);
-    const selectedPayment = paymentMethods.find(p => p.id === selectedPaymentMethod);
+    const selectedTicket = ticketTypes.find(t => t._id === selectedTicketType || t.id === selectedTicketType);
+    const selectedPayment = paymentMethods.find(p => p._id === selectedPaymentMethod || p.id === selectedPaymentMethod);
     const totalPrice = selectedTicket ? selectedTicket.price * quantity : 0;
 
     const navigate = useNavigate(); // Add this hook
+
+    if (loadingData) {
+        return (
+            <div style={{ padding: '2rem', textAlign: 'center' }}>
+                <p>Loading ticket information...</p>
+            </div>
+        );
+    }
+
+    if (ticketTypes.length === 0) {
+        return (
+            <div style={{ padding: '2rem', textAlign: 'center' }}>
+                <AlertCircle size={48} style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }} />
+                <h3>No Tickets Available</h3>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+                    Tickets have not been configured for this event yet.
+                </p>
+                <button onClick={onClose} className="btn btn-outline">Close</button>
+            </div>
+        );
+    }
 
     const handlePurchase = async () => {
         if (!eligibility.allowed) {
@@ -43,7 +77,7 @@ export default function TicketPurchase({ event, onClose, onPurchaseComplete }) {
 
         setLoading(true);
         const result = await createOrder({
-            event_id: event.id,
+            event_id: event._id || event.id,
             ticket_type_id: selectedTicketType,
             quantity: quantity,
             payment_method_id: selectedPaymentMethod
@@ -166,19 +200,20 @@ export default function TicketPurchase({ event, onClose, onPurchaseComplete }) {
                     ) : (
                         <div style={{ display: 'grid', gap: '1rem' }}>
                             {ticketTypes.map(ticket => {
+                                const ticketId = ticket._id || ticket.id;
                                 const availableQty = (ticket.total_quantity || 0) - (ticket.sold_count || 0);
                                 const isAvailable = availableQty > 0;
                                 
                                 return (
                                 <div
-                                    key={ticket.id}
-                                    onClick={() => isAvailable && setSelectedTicketType(ticket.id)}
+                                    key={ticketId}
+                                    onClick={() => isAvailable && setSelectedTicketType(ticketId)}
                                     className="card glass-panel"
                                     style={{
                                         padding: '1.5rem',
                                         cursor: isAvailable ? 'pointer' : 'not-allowed',
                                         opacity: isAvailable ? 1 : 0.6,
-                                        border: selectedTicketType === ticket.id ? '2px solid var(--primary)' : '2px solid transparent',
+                                        border: selectedTicketType === ticketId ? '2px solid var(--primary)' : '2px solid transparent',
                                         transition: 'all 0.3s ease'
                                     }}
                                 >
@@ -212,7 +247,7 @@ export default function TicketPurchase({ event, onClose, onPurchaseComplete }) {
                                                 </div>
                                             </div>
                                         </div>
-                                        {selectedTicketType === ticket.id && (
+                                        {selectedTicketType === ticketId && (
                                             <div style={{
                                                 width: '24px',
                                                 height: '24px',
@@ -276,15 +311,17 @@ export default function TicketPurchase({ event, onClose, onPurchaseComplete }) {
                         </div>
                     ) : (
                         <div style={{ display: 'grid', gap: '1rem' }}>
-                            {paymentMethods.map(method => (
+                            {paymentMethods.map(method => {
+                                const methodId = method._id || method.id;
+                                return (
                                 <div
-                                    key={method.id}
-                                    onClick={() => setSelectedPaymentMethod(method.id)}
+                                    key={methodId}
+                                    onClick={() => setSelectedPaymentMethod(methodId)}
                                     className="card glass-panel"
                                     style={{
                                         padding: '1.5rem',
                                         cursor: 'pointer',
-                                        border: selectedPaymentMethod === method.id ? '2px solid var(--primary)' : '2px solid transparent',
+                                        border: selectedPaymentMethod === methodId ? '2px solid var(--primary)' : '2px solid transparent',
                                         transition: 'all 0.3s ease'
                                     }}
                                 >
@@ -297,7 +334,7 @@ export default function TicketPurchase({ event, onClose, onPurchaseComplete }) {
                                                 {method.type.replace('_', ' ').toUpperCase()}
                                             </p>
                                         </div>
-                                        {selectedPaymentMethod === method.id && (
+                                        {selectedPaymentMethod === methodId && (
                                             <div style={{
                                                 width: '24px',
                                                 height: '24px',
@@ -313,7 +350,7 @@ export default function TicketPurchase({ event, onClose, onPurchaseComplete }) {
                                         )}
                                     </div>
                                 </div>
-                            ))}
+                            )})}
                         </div>
                     )}
                 </div>

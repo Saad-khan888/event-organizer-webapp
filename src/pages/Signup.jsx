@@ -215,9 +215,19 @@ export default function Signup() {
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem', gap: '1rem' }}>
                 {[1, 2, 3].map(s => (
                     <div key={s} style={{
-                        width: '30px', height: '30px', borderRadius: '50%',
-                        background: step >= s ? 'var(--primary)' : 'var(--bg-tertiary)',
-                        color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'
+                        width: '40px', 
+                        height: '40px', 
+                        borderRadius: '50%',
+                        background: step >= s ? 'var(--md-primary)' : 'var(--bg-tertiary)',
+                        color: step >= s ? '#ffffff' : 'var(--text-secondary)', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        fontWeight: '600',
+                        fontSize: '1.1rem',
+                        border: step >= s ? 'none' : '2px solid var(--border)',
+                        boxShadow: step >= s ? 'var(--elevation-2)' : 'none',
+                        transition: 'all 0.3s ease'
                     }}>
                         {s}
                     </div>

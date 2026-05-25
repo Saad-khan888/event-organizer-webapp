@@ -18,7 +18,7 @@ export default function OrganizerDashboard() {
     // 1. HOOKS & CONTEXT
     const { user } = useAuth(); // Current organizer (logged-in user)
     const { addEvent, updateEvent, deleteEvent, events, users } = useData(); // Global Data Actions
-    const { orders, ticketTypes, loading: ticketingLoading } = useTicketing(); // Ticketing stats
+    const { orders, getEventTicketTypes } = useTicketing(); // Ticketing stats
     const navigate = useNavigate();
 
     // UI Local State
@@ -28,19 +28,46 @@ export default function OrganizerDashboard() {
     const [showTicketConfig, setShowTicketConfig] = useState(null); // Event ID to configure tickets for
     const [showPaymentSetup, setShowPaymentSetup] = useState(null); // Event ID to configure payments for
     const [isSubmitting, setIsSubmitting] = useState(false); // Global saving indicator
+    const [eventTicketData, setEventTicketData] = useState({}); // Store ticket data per event
+    const [loadingTickets, setLoadingTickets] = useState(true);
 
     // 2. FORM STATE
     const [formData, setFormData] = useState({ title: '', date: '', time: '', location: '', description: '', category: 'Boxing', prize_first: '', prize_second: '', prize_third: '' });
 
     // Filter the global events list down to only the ones BELONGING to this organizer.
-    const myEvents = events.filter(e => String(e.organizer) === String(user.id) || String(e.organizerId) === String(user.id));
+    const myEvents = React.useMemo(() => 
+        events.filter(e => String(e.organizer) === String(user.id) || String(e.organizerId) === String(user.id)),
+        [events, user.id]
+    );
 
     // Count pending verifications
     const pendingCount = orders.filter(o => o.status === 'pending_verification').length;
 
+    // Fetch ticket data for all events
+    const fetchAllTicketData = React.useCallback(async () => {
+        if (myEvents.length === 0) {
+            setLoadingTickets(false);
+            return;
+        }
+        
+        setLoadingTickets(true);
+        const data = {};
+        for (const event of myEvents) {
+            const eventId = event._id || event.id;
+            const types = await getEventTicketTypes(eventId);
+            data[eventId] = types;
+        }
+        setEventTicketData(data);
+        setLoadingTickets(false);
+    }, [myEvents, getEventTicketTypes]);
+
+    React.useEffect(() => {
+        fetchAllTicketData();
+    }, [fetchAllTicketData]);
+
     const getEventTicketStats = (eventId) => {
         const eventIdStr = String(eventId);
-        const types = (ticketTypes || []).filter(tt => String(tt.event_id) === eventIdStr);
+        const types = eventTicketData[eventIdStr] || [];
 
         const totals = types.reduce((acc, tt) => {
             acc.total += (tt.total_quantity || 0);
@@ -49,7 +76,7 @@ export default function OrganizerDashboard() {
             return acc;
         }, { total: 0, sold: 0, left: 0 });
 
-        const eventOrders = (orders || []).filter(o => String(o.event_id) === eventIdStr);
+        const eventOrders = (orders || []).filter(o => String(o.event_id) === eventIdStr || String(o.event) === eventIdStr);
         const pendingPayment = eventOrders.filter(o => o.status === 'pending_payment').length;
         const pendingVerification = eventOrders.filter(o => o.status === 'pending_verification').length;
         const paid = eventOrders.filter(o => o.status === 'paid').length;
@@ -307,7 +334,10 @@ export default function OrganizerDashboard() {
                             <div className="card glass-panel" style={{ width: '90%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto' }}>
                                 <TicketConfiguration
                                     eventId={showTicketConfig}
-                                    onClose={() => setShowTicketConfig(null)}
+                                    onClose={() => {
+                                        setShowTicketConfig(null);
+                                        fetchAllTicketData(); // Refresh ticket data
+                                    }}
                                 />
                             </div>
                         </div>
@@ -322,7 +352,10 @@ export default function OrganizerDashboard() {
                             <div className="card glass-panel" style={{ width: '90%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto' }}>
                                 <PaymentMethodSetup
                                     eventId={showPaymentSetup}
-                                    onClose={() => setShowPaymentSetup(null)}
+                                    onClose={() => {
+                                        setShowPaymentSetup(null);
+                                        fetchAllTicketData(); // Refresh ticket data
+                                    }}
                                 />
                             </div>
                         </div>
@@ -386,32 +419,32 @@ export default function OrganizerDashboard() {
                                                     <div className="card" style={{ padding: '0.75rem' }}>
                                                         <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Total seats</div>
                                                         <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
-                                                            {ticketingLoading ? '...' : (stats.hasTicketTypes ? stats.total : '—')}
+                                                            {loadingTickets ? '...' : (stats.hasTicketTypes ? stats.total : '—')}
                                                         </div>
                                                     </div>
                                                     <div className="card" style={{ padding: '0.75rem' }}>
                                                         <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Sold/Reserved</div>
                                                         <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
-                                                            {ticketingLoading ? '...' : (stats.hasTicketTypes ? stats.sold : '—')}
+                                                            {loadingTickets ? '...' : (stats.hasTicketTypes ? stats.sold : '—')}
                                                         </div>
                                                     </div>
                                                     <div className="card" style={{ padding: '0.75rem' }}>
                                                         <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Seats left</div>
                                                         <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
-                                                            {ticketingLoading ? '...' : (stats.hasTicketTypes ? stats.left : '—')}
+                                                            {loadingTickets ? '...' : (stats.hasTicketTypes ? stats.left : '—')}
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 <div style={{ display: 'flex', gap: 'var(--space-1)', flexWrap: 'wrap' }}>
                                                     <span className="badge badge-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-                                                        Pending payment: {ticketingLoading ? '...' : stats.pendingPayment}
+                                                        Pending payment: {loadingTickets ? '...' : stats.pendingPayment}
                                                     </span>
                                                     <span className="badge badge-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-                                                        Pending verify: {ticketingLoading ? '...' : stats.pendingVerification}
+                                                        Pending verify: {loadingTickets ? '...' : stats.pendingVerification}
                                                     </span>
                                                     <span className="badge badge-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-                                                        Paid: {ticketingLoading ? '...' : stats.paid}
+                                                        Paid: {loadingTickets ? '...' : stats.paid}
                                                     </span>
                                                 </div>
                                             </div>
@@ -442,14 +475,14 @@ export default function OrganizerDashboard() {
                                         {/* Action Buttons */}
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', gap: 'var(--space-1)' }}>
                                             <button
-                                                onClick={() => setShowTicketConfig(ev.id)}
+                                                onClick={() => setShowTicketConfig(ev._id || ev.id)}
                                                 className="btn btn-outline btn-sm"
                                                 title="Manage Tickets"
                                             >
                                                 <Ticket size={14} /> <span className="hide-mobile">Tickets</span>
                                             </button>
                                             <button
-                                                onClick={() => setShowPaymentSetup(ev.id)}
+                                                onClick={() => setShowPaymentSetup(ev._id || ev.id)}
                                                 className="btn btn-outline btn-sm"
                                                 title="Payment Methods"
                                             >

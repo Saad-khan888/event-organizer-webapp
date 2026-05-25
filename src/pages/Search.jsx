@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
-import { getImageUrl } from '../lib/supabase';
+import { getImageUrl } from '../lib/imageUtils';
 import { Search as SearchIcon, Filter, Briefcase, Medal, Newspaper, User } from 'lucide-react';
 
 // -----------------------------------------------------------------------------

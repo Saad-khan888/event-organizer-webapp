@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTicketing } from '../../context/TicketingContext';
+import { useAuth } from '../../context/AuthContext';
 import { CreditCard, Plus, Edit, Trash2, X, Building2, Smartphone, Wallet } from 'lucide-react';
 
 // =====================================================
@@ -15,6 +16,7 @@ const PAYMENT_TYPES = [
 ];
 
 export default function PaymentMethodSetup({ eventId, onClose }) {
+    const { user } = useAuth();
     const {
         createPaymentMethod,
         updatePaymentMethod,
@@ -24,6 +26,8 @@ export default function PaymentMethodSetup({ eventId, onClose }) {
 
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    const [eventPaymentMethods, setEventPaymentMethods] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
         name: '',
         type: 'bank_transfer',
@@ -39,7 +43,16 @@ export default function PaymentMethodSetup({ eventId, onClose }) {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const eventPaymentMethods = getEventPaymentMethods(eventId);
+    // Fetch payment methods
+    React.useEffect(() => {
+        const fetchMethods = async () => {
+            setLoading(true);
+            const methods = await getEventPaymentMethods(eventId);
+            setEventPaymentMethods(methods || []);
+            setLoading(false);
+        };
+        fetchMethods();
+    }, [eventId, getEventPaymentMethods]);
 
     const resetForm = () => {
         setFormData({
@@ -79,19 +92,21 @@ export default function PaymentMethodSetup({ eventId, onClose }) {
 
         try {
             const paymentMethodData = {
-                ...formData,
-                event_id: eventId
+                ...formData
             };
 
             let result;
             if (editingId) {
                 result = await updatePaymentMethod(editingId, paymentMethodData);
             } else {
-                result = await createPaymentMethod(paymentMethodData);
+                result = await createPaymentMethod(eventId, paymentMethodData);
             }
 
             if (result.success) {
                 alert(editingId ? 'Payment method updated!' : 'Payment method created!');
+                // Refresh payment methods
+                const methods = await getEventPaymentMethods(eventId);
+                setEventPaymentMethods(methods || []);
                 resetForm();
             } else {
                 alert('Error: ' + result.error);
@@ -109,6 +124,9 @@ export default function PaymentMethodSetup({ eventId, onClose }) {
             const result = await deletePaymentMethod(id);
             if (result.success) {
                 alert('Payment method deleted!');
+                // Refresh payment methods
+                const methods = await getEventPaymentMethods(eventId);
+                setEventPaymentMethods(methods || []);
             } else {
                 alert('Error: ' + result.error);
             }

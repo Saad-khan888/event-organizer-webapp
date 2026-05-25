@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTicketing } from '../../context/TicketingContext';
+import { getImageUrl } from '../../lib/imageUtils';
 import { CheckCircle, XCircle, Eye, Clock, User, Calendar, DollarSign, AlertCircle } from 'lucide-react';
 
 // =====================================================
@@ -341,12 +342,23 @@ export default function PaymentVerificationDashboard() {
                             <div style={{ marginBottom: '1.5rem' }}>
                                 <h4 style={{ marginBottom: '0.75rem' }}>Payment Proof:</h4>
                                 <img
-                                    src={selectedOrder.payment_proof_url}
+                                    src={selectedOrder.payment_proof_url.startsWith('http') || selectedOrder.payment_proof_url.startsWith('/uploads/') 
+                                        ? selectedOrder.payment_proof_url.startsWith('http') 
+                                            ? selectedOrder.payment_proof_url 
+                                            : `http://localhost:5001${selectedOrder.payment_proof_url}`
+                                        : getImageUrl('payment-proofs', selectedOrder.payment_proof_url)}
                                     alt="Payment proof"
                                     style={{
                                         maxWidth: '100%',
                                         borderRadius: '8px',
                                         border: '1px solid rgba(255,255,255,0.1)'
+                                    }}
+                                    onError={(e) => {
+                                        console.error('❌ Payment proof failed to load:', selectedOrder.payment_proof_url);
+                                        e.target.style.border = '2px solid red';
+                                    }}
+                                    onLoad={() => {
+                                        console.log('✅ Payment proof loaded:', selectedOrder.payment_proof_url);
                                     }}
                                 />
                                 {selectedOrder.payment_details && (

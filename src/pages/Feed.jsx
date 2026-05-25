@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
-import { getImageUrl } from '../lib/supabase';
+import { getImageUrl } from '../lib/imageUtils';
 import { Clock, User } from 'lucide-react';
 
 // -----------------------------------------------------------------------------
@@ -62,21 +62,32 @@ export default function Feed() {
                                     gridTemplateColumns: report.images.length === 1 ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))',
                                     gap: '1rem', marginTop: '1.5rem'
                                 }}>
-                                    {report.images.map((img, idx) => (
-                                        <img
-                                            key={idx}
-                                            src={getImageUrl('report-images', img)}
-                                            alt={`Report content ${idx + 1}`}
-                                            style={{
-                                                width: '100%',
-                                                height: report.images.length === 1 ? 'auto' : '200px',
-                                                maxHeight: '500px',
-                                                objectFit: 'cover',
-                                                borderRadius: 'var(--radius-md)',
-                                                border: '1px solid var(--glass-border)'
-                                            }}
-                                        />
-                                    ))}
+                                    {report.images.map((img, idx) => {
+                                        const imageUrl = getImageUrl('report-images', img);
+                                        console.log(`🖼️ Feed: Rendering image ${idx + 1}:`, img, '→', imageUrl);
+                                        return (
+                                            <img
+                                                key={idx}
+                                                src={imageUrl}
+                                                alt={`Report content ${idx + 1}`}
+                                                style={{
+                                                    width: '100%',
+                                                    height: report.images.length === 1 ? 'auto' : '200px',
+                                                    maxHeight: '500px',
+                                                    objectFit: 'cover',
+                                                    borderRadius: 'var(--radius-md)',
+                                                    border: '1px solid var(--glass-border)'
+                                                }}
+                                                onError={(e) => {
+                                                    console.error('❌ Image failed to load:', imageUrl);
+                                                    e.target.style.border = '2px solid red';
+                                                }}
+                                                onLoad={() => {
+                                                    console.log('✅ Image loaded successfully:', imageUrl);
+                                                }}
+                                            />
+                                        );
+                                    })}
                                 </div>
                             )}
 
@@ -84,8 +95,17 @@ export default function Feed() {
                             <div style={{ marginTop: '2rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
                                 {(() => {
                                     // Match the reporter ID to a User object to show their name and photo
-                                    const author = users.find(u => u.id === report.reporter);
-                                    const authorName = author ? `${author.firstName} ${author.lastName}` : (report.authorName || 'Unknown Reporter');
+                                    // Handle both populated (object) and non-populated (string) reporter field
+                                    const reporterId = typeof report.reporter === 'object' ? report.reporter?._id || report.reporter?.id : report.reporter;
+                                    const author = users.find(u => String(u.id) === String(reporterId) || String(u._id) === String(reporterId));
+                                    
+                                    // If reporter is already populated, use that data
+                                    const reporterData = typeof report.reporter === 'object' ? report.reporter : null;
+                                    const authorName = reporterData 
+                                        ? `${reporterData.firstName} ${reporterData.lastName}`
+                                        : author 
+                                            ? `${author.firstName} ${author.lastName}` 
+                                            : (report.authorName || 'Unknown Reporter');
 
                                     let avatarSrc = null;
                                     if (author) {

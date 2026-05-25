@@ -32,7 +32,12 @@ export default function QRScanner({ eventId: propEventId }) {
         const validationResult = await validateTicket(manualCode, eventId);
 
         setScanning(false);
-        setResult(validationResult);
+        
+        // Wrap the result in the expected format
+        setResult({
+            success: true,
+            data: validationResult
+        });
 
         // Clear after 5 seconds
         setTimeout(() => {

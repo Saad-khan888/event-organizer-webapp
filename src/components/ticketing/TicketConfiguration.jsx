@@ -19,6 +19,8 @@ export default function TicketConfiguration({ eventId, onClose }) {
 
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    const [eventTickets, setEventTickets] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -30,7 +32,17 @@ export default function TicketConfiguration({ eventId, onClose }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const event = events.find(e => e.id === eventId);
-    const eventTickets = getEventTicketTypes(eventId);
+
+    // Fetch ticket types
+    React.useEffect(() => {
+        const fetchTickets = async () => {
+            setLoading(true);
+            const tickets = await getEventTicketTypes(eventId);
+            setEventTickets(tickets || []);
+            setLoading(false);
+        };
+        fetchTickets();
+    }, [eventId, getEventTicketTypes]);
 
     const resetForm = () => {
         setFormData({
@@ -87,21 +99,22 @@ export default function TicketConfiguration({ eventId, onClose }) {
                 total_quantity: qtyNum,
                 sale_start_date: formData.sale_start_date || null,
                 sale_end_date: formData.sale_end_date || null,
-                event_id: eventId,
-                // On creation, all tickets are available
-                available_quantity: editingId ? undefined : qtyNum,
-                sold_count: editingId ? undefined : 0
+                // These are handled by database triggers/defaults:
+                // available_quantity, sold_count, is_active
             };
 
             let result;
             if (editingId) {
                 result = await updateTicketType(editingId, ticketData);
             } else {
-                result = await createTicketType(ticketData);
+                result = await createTicketType(eventId, ticketData);
             }
 
             if (result.success) {
                 alert(editingId ? 'Ticket type updated!' : 'Ticket type created!');
+                // Refresh ticket types
+                const tickets = await getEventTicketTypes(eventId);
+                setEventTickets(tickets || []);
                 resetForm();
             } else {
                 alert('Error: ' + result.error);
@@ -119,6 +132,9 @@ export default function TicketConfiguration({ eventId, onClose }) {
             const result = await deleteTicketType(id);
             if (result.success) {
                 alert('Ticket type deleted!');
+                // Refresh ticket types
+                const tickets = await getEventTicketTypes(eventId);
+                setEventTickets(tickets || []);
             } else {
                 alert('Error: ' + result.error);
             }
