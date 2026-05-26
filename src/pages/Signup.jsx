@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { SPORTS_CATEGORIES } from '../lib/constants';
 import ImageUpload from '../components/ImageUpload';
 import { Briefcase, Medal, Newspaper, ArrowLeft, ArrowRight, Eye } from 'lucide-react';
 
@@ -62,7 +63,7 @@ export default function Signup() {
         companyName: '',
         firstName: '',
         lastName: '',
-        category: 'Boxing',
+        category: SPORTS_CATEGORIES[0],
         previousVictories: '',
         socialMedia: '',
         mediaOrganization: '',
