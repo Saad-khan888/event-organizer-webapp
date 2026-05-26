@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { useTicketing } from '../context/TicketingContext';
+import { SPORTS_CATEGORIES } from '../lib/constants';
 import { getImageUrl } from '../lib/imageUtils';
 import { Search as SearchIcon, MapPin, Calendar, Tag, CheckCircle, AlertCircle, Filter, Briefcase } from 'lucide-react';
 
@@ -93,8 +94,7 @@ export default function Events() {
                             onChange={(e) => setFilters({ ...filters, sport: e.target.value })}
                         >
                             <option value="">All Sports</option>
-                            {/* Predefined list of sports */}
-                            {['Boxing', 'MMA', 'Tennis', 'Badminton', 'Gymnastics'].map(cat => (
+                            {SPORTS_CATEGORIES.map(cat => (
                                 <option key={cat} value={cat}>{cat}</option>
                             ))}
                         </select>

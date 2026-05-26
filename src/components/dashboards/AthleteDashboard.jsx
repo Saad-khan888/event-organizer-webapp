@@ -23,9 +23,11 @@ export default function AthleteDashboard() {
     const myEvents = events.filter(e => e.participants?.includes(user?.id));
 
     // B. "Available Events" = All events I haven't joined yet that match my category (e.g. Boxing).
+    // Athletes can ONLY see events in their selected category
     const availableEvents = events.filter(e => {
         if (e.participants?.includes(user?.id)) return false;
-        return (user.category === 'All' || !user.category || e.category === user.category);
+        // Strict category matching - athletes can only join events in their category
+        return e.category === user.category;
     });
 
     return (

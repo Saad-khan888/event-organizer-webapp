@@ -111,8 +111,8 @@ router.delete('/:id', authenticate, authorize('organizer'), async (req, res) => 
   }
 });
 
-// Join event (athletes)
-router.post('/:id/join', authenticate, authorize('athlete'), async (req, res) => {
+// Join event (athletes and reporters)
+router.post('/:id/join', authenticate, authorize('athlete', 'reporter'), async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
     
@@ -123,7 +123,18 @@ router.post('/:id/join', authenticate, authorize('athlete'), async (req, res) =>
     console.log('🎯 Join event request:');
     console.log('   Event ID:', req.params.id);
     console.log('   User ID:', req.user._id.toString());
+    console.log('   User role:', req.user.role);
+    console.log('   User category:', req.user.category);
+    console.log('   Event category:', event.category);
     console.log('   Current participants:', event.participants.map(p => p.toString()));
+
+    // CATEGORY RESTRICTION: Athletes and reporters can only join events in their category
+    if (req.user.category !== event.category) {
+      console.log('❌ Category mismatch - user cannot join this event');
+      return res.status(403).json({ 
+        error: `You can only join ${req.user.category} events. This is a ${event.category} event.` 
+      });
+    }
 
     // Check if user already joined - convert ObjectIds to strings for comparison
     const alreadyJoined = event.participants.some(
@@ -156,8 +167,8 @@ router.post('/:id/join', authenticate, authorize('athlete'), async (req, res) =>
   }
 });
 
-// Leave event (athletes)
-router.post('/:id/leave', authenticate, authorize('athlete'), async (req, res) => {
+// Leave event (athletes and reporters)
+router.post('/:id/leave', authenticate, authorize('athlete', 'reporter'), async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
     

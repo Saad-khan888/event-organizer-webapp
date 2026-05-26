@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
+import { SPORTS_CATEGORIES } from '../../lib/constants';
 import ImageUpload from '../ImageUpload';
 import { getImageUrl } from '../../lib/imageUtils';
 import { PenTool, FileText, Clock, Trash2 } from 'lucide-react';
@@ -17,7 +18,7 @@ export default function ReporterDashboard() {
     const { addReport, reports, deleteReport } = useData(); // Report handling actions
 
     // UI Local State for the New Article Form
-    const [newReport, setNewReport] = useState({ title: '', content: '', category: 'Boxing', images: [] });
+    const [newReport, setNewReport] = useState({ title: '', content: '', category: SPORTS_CATEGORIES[0], images: [] });
     const [isPublishing, setIsPublishing] = useState(false);
 
     // Filter available reports to show only ones BELONGING to this reporter.
@@ -109,7 +110,7 @@ export default function ReporterDashboard() {
             };
 
             await addReport(reportData); // Send to backend
-            setNewReport({ title: '', content: '', category: 'Boxing', images: [] }); // Reset form
+            setNewReport({ title: '', content: '', category: SPORTS_CATEGORIES[0], images: [] }); // Reset form
             alert('Report published successfully!');
         } catch (error) {
             console.error('Publish error:', error);
@@ -149,28 +150,9 @@ export default function ReporterDashboard() {
                             <div className="form-group">
                                 <label className="form-label">Category</label>
                                 <select className="form-select" value={newReport.category} onChange={e => setNewReport({ ...newReport, category: e.target.value })}>
-                                    <option value="Badminton">Badminton</option>
-                                    <option value="Basketball">Basketball</option>
-                                    <option value="Bowling">Bowling</option>
-                                    <option value="Boxing">Boxing</option>
-                                    <option value="Fencing">Fencing</option>
-                                    <option value="Futsal">Futsal (Indoor Soccer)</option>
-                                    <option value="Gymnastics">Gymnastics</option>
-                                    <option value="Handball">Handball</option>
-                                    <option value="Ice Hockey">Ice Hockey</option>
-                                    <option value="Indoor Cricket">Indoor Cricket</option>
-                                    <option value="Judo">Judo</option>
-                                    <option value="Karate">Karate</option>
-                                    <option value="MMA">MMA (Mixed Martial Arts)</option>
-                                    <option value="Netball">Netball</option>
-                                    <option value="Pickleball">Pickleball</option>
-                                    <option value="Squash">Squash</option>
-                                    <option value="Table Tennis">Table Tennis</option>
-                                    <option value="Taekwondo">Taekwondo</option>
-                                    <option value="Tennis">Tennis</option>
-                                    <option value="Volleyball">Volleyball</option>
-                                    <option value="Wrestling">Wrestling</option>
-                                    <option value="Other">Other</option>
+                                    {SPORTS_CATEGORIES.map(cat => (
+                                        <option key={cat} value={cat}>{cat}</option>
+                                    ))}
                                 </select>
                             </div>
 

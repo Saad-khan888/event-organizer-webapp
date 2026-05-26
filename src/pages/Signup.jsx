@@ -373,28 +373,9 @@ export default function Signup() {
                                 <div className="form-group">
                                     <label className="form-label">Sports Category</label>
                                     <select name="category" className="form-select" value={formData.category} onChange={handleChange}>
-                                        <option value="Badminton">Badminton</option>
-                                        <option value="Basketball">Basketball</option>
-                                        <option value="Bowling">Bowling</option>
-                                        <option value="Boxing">Boxing</option>
-                                        <option value="Fencing">Fencing</option>
-                                        <option value="Futsal">Futsal (Indoor Soccer)</option>
-                                        <option value="Gymnastics">Gymnastics</option>
-                                        <option value="Handball">Handball</option>
-                                        <option value="Ice Hockey">Ice Hockey</option>
-                                        <option value="Indoor Cricket">Indoor Cricket</option>
-                                        <option value="Judo">Judo</option>
-                                        <option value="Karate">Karate</option>
-                                        <option value="MMA">MMA (Mixed Martial Arts)</option>
-                                        <option value="Netball">Netball</option>
-                                        <option value="Pickleball">Pickleball</option>
-                                        <option value="Squash">Squash</option>
-                                        <option value="Table Tennis">Table Tennis</option>
-                                        <option value="Taekwondo">Taekwondo</option>
-                                        <option value="Tennis">Tennis</option>
-                                        <option value="Volleyball">Volleyball</option>
-                                        <option value="Wrestling">Wrestling</option>
-                                        <option value="Other">Other</option>
+                                        {SPORTS_CATEGORIES.map(cat => (
+                                            <option key={cat} value={cat}>{cat}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="form-group">
@@ -418,28 +399,9 @@ export default function Signup() {
                                 <div className="form-group">
                                     <label className="form-label">Sports Category</label>
                                     <select name="category" className="form-select" value={formData.category} onChange={handleChange}>
-                                        <option value="Badminton">Badminton</option>
-                                        <option value="Basketball">Basketball</option>
-                                        <option value="Bowling">Bowling</option>
-                                        <option value="Boxing">Boxing</option>
-                                        <option value="Fencing">Fencing</option>
-                                        <option value="Futsal">Futsal (Indoor Soccer)</option>
-                                        <option value="Gymnastics">Gymnastics</option>
-                                        <option value="Handball">Handball</option>
-                                        <option value="Ice Hockey">Ice Hockey</option>
-                                        <option value="Indoor Cricket">Indoor Cricket</option>
-                                        <option value="Judo">Judo</option>
-                                        <option value="Karate">Karate</option>
-                                        <option value="MMA">MMA (Mixed Martial Arts)</option>
-                                        <option value="Netball">Netball</option>
-                                        <option value="Pickleball">Pickleball</option>
-                                        <option value="Squash">Squash</option>
-                                        <option value="Table Tennis">Table Tennis</option>
-                                        <option value="Taekwondo">Taekwondo</option>
-                                        <option value="Tennis">Tennis</option>
-                                        <option value="Volleyball">Volleyball</option>
-                                        <option value="Wrestling">Wrestling</option>
-                                        <option value="Other">Other</option>
+                                        {SPORTS_CATEGORIES.map(cat => (
+                                            <option key={cat} value={cat}>{cat}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="form-group">

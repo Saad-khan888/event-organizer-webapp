@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
-import { useTicketing } from '../../context/TicketingContext'; // NEW
+import { useTicketing } from '../../context/TicketingContext';
+import { SPORTS_CATEGORIES } from '../../lib/constants';
 import { Calendar, Plus, MapPin, Edit, Trash2, X, Check, Ticket, CreditCard, Scan, DollarSign } from 'lucide-react';
 import TicketConfiguration from '../ticketing/TicketConfiguration';
 import PaymentMethodSetup from '../ticketing/PaymentMethodSetup';
-import PaymentVerificationDashboard from '../ticketing/PaymentVerificationDashboard'; // NEW
+import PaymentVerificationDashboard from '../ticketing/PaymentVerificationDashboard';
 
 // -----------------------------------------------------------------------------
 // COMPONENT: ORGANIZER DASHBOARD
@@ -32,7 +33,7 @@ export default function OrganizerDashboard() {
     const [loadingTickets, setLoadingTickets] = useState(true);
 
     // 2. FORM STATE
-    const [formData, setFormData] = useState({ title: '', date: '', time: '', location: '', description: '', category: 'Boxing', prize_first: '', prize_second: '', prize_third: '' });
+    const [formData, setFormData] = useState({ title: '', date: '', time: '', location: '', description: '', category: SPORTS_CATEGORIES[0], prize_first: '', prize_second: '', prize_third: '' });
 
     // Filter the global events list down to only the ones BELONGING to this organizer.
     const myEvents = React.useMemo(() => 
@@ -96,7 +97,7 @@ export default function OrganizerDashboard() {
 
     // Clear the form and hide it
     const resetForm = () => {
-        setFormData({ title: '', date: '', time: '', location: '', description: '', category: 'Boxing', prize_first: '', prize_second: '', prize_third: '' });
+        setFormData({ title: '', date: '', time: '', location: '', description: '', category: SPORTS_CATEGORIES[0], prize_first: '', prize_second: '', prize_third: '' });
         setEditingId(null);
         setShowCreate(false);
     };
@@ -256,28 +257,9 @@ export default function OrganizerDashboard() {
                                     <div className="form-group">
                                         <label className="form-label">Category</label>
                                         <select className="form-select" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
-                                            <option value="Badminton">Badminton</option>
-                                            <option value="Basketball">Basketball</option>
-                                            <option value="Bowling">Bowling</option>
-                                            <option value="Boxing">Boxing</option>
-                                            <option value="Fencing">Fencing</option>
-                                            <option value="Futsal">Futsal (Indoor Soccer)</option>
-                                            <option value="Gymnastics">Gymnastics</option>
-                                            <option value="Handball">Handball</option>
-                                            <option value="Ice Hockey">Ice Hockey</option>
-                                            <option value="Indoor Cricket">Indoor Cricket</option>
-                                            <option value="Judo">Judo</option>
-                                            <option value="Karate">Karate</option>
-                                            <option value="MMA">MMA (Mixed Martial Arts)</option>
-                                            <option value="Netball">Netball</option>
-                                            <option value="Pickleball">Pickleball</option>
-                                            <option value="Squash">Squash</option>
-                                            <option value="Table Tennis">Table Tennis</option>
-                                            <option value="Taekwondo">Taekwondo</option>
-                                            <option value="Tennis">Tennis</option>
-                                            <option value="Volleyball">Volleyball</option>
-                                            <option value="Wrestling">Wrestling</option>
-                                            <option value="Other">Other</option>
+                                            {SPORTS_CATEGORIES.map(cat => (
+                                                <option key={cat} value={cat}>{cat}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>

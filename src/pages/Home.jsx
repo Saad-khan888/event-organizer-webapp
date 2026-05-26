@@ -306,7 +306,7 @@ export default function Home() {
                     }}>
                         <div>
                             <h3 style={{ marginBottom: '1rem', fontSize: '1.3rem', fontWeight: '600' }}>
-                                Sports Ecosystem
+                                Pak Sports Hub
                             </h3>
                             <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
                                 The ultimate platform for creating, managing, and experiencing sports events.
@@ -347,7 +347,7 @@ export default function Home() {
                         textAlign: 'center',
                         color: 'var(--text-secondary)'
                     }}>
-                        <p>© 2026 Sports Ecosystem. All rights reserved.</p>
+                        <p>© 2026 Pak Sports Hub. All rights reserved.</p>
                     </div>
                 </div>
             </footer>
